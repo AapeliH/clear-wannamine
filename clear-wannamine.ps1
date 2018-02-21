@@ -54,7 +54,7 @@ function Clear-WannaMine
             
             }
         
-        get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -Verbose 
+        get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -force -Verbose 
         
         }
     Process
@@ -66,7 +66,7 @@ function Clear-WannaMine
         $EventFilter             = Get-WMIObject -Namespace root\Subscription -Class __EventFilter  -ErrorAction SilentlyContinue| select *
         $Win32_Services          = Get-WMIObject -Namespace root\default -Class Win32_Services -ErrorAction SilentlyContinue | select *
         
-        get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -Verbose
+        get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -force -Verbose
 
         switch ($logOnly.IsPresent) {
         
