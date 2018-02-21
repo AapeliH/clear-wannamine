@@ -6,7 +6,7 @@ function Clear-WannaMine
 .DESCRIPTION
    Functions purpose is to remove wannaMine from computer. You can use LogOnly switch to only look in to the objects that this function would remove. 
    Default log path is c:\temp\wannamine, which is created if it does not exist.
-   Script will close all other existing powershell processes
+   Script will close all other existing powershell processes. I highly recommend that you run logonly first.
 .EXAMPLE
    Clear-WannaMine -LogPath c:\temp
    
@@ -23,7 +23,8 @@ function Clear-WannaMine
    Clear-WannaMine
 
    Command will try to clear the computer and makes log files to path c:\temp\wannamine
-.AUTHOR
+.Notes
+   Author
    Aapeli Hietikko 2018.02.20
    aapeli@hietikko.net
 #>
@@ -46,7 +47,12 @@ function Clear-WannaMine
         {
         Write-output "spinning up the clear-wannamine"
         $date = (get-date -Format "yyyyMMdd-HHmmss" )
-        if (-not (test-path $LogPath)) {new-item -Path $LogPath -ItemType Directory -Confirm:$false -Force -Verbose}
+        
+        if (-not (test-path $LogPath)) {
+            
+            new-item -Path $LogPath -ItemType Directory -Confirm:$false -Force -Verbose
+            
+            }
         
         get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -Verbose 
         
@@ -55,11 +61,12 @@ function Clear-WannaMine
         {
 
         #Logging
-        $commandlineObjects      = Get-WMIObject -Namespace root\Subscription -Class CommandLineEventConsumer -ErrorAction SilentlyContinue | fl commandlinetemplate, name, workingdirectory, __path, __namespace
-        $FilterToConsumerBinding = Get-WMIObject -Namespace root\Subscription -Class __FilterToConsumerBinding  -ErrorAction SilentlyContinue| fl *
-        $EventFilter             = Get-WMIObject -Namespace root\Subscription -Class __EventFilter  -ErrorAction SilentlyContinue| fl __namespace,path,query,name
-        $Win32_Services          = Get-WMIObject -Namespace root\default -Class Win32_Services -ErrorAction SilentlyContinue | fl *
+        $commandlineObjects      = Get-WMIObject -Namespace root\Subscription -Class CommandLineEventConsumer -ErrorAction SilentlyContinue | select *
+        $FilterToConsumerBinding = Get-WMIObject -Namespace root\Subscription -Class __FilterToConsumerBinding  -ErrorAction SilentlyContinue| select *
+        $EventFilter             = Get-WMIObject -Namespace root\Subscription -Class __EventFilter  -ErrorAction SilentlyContinue| select *
+        $Win32_Services          = Get-WMIObject -Namespace root\default -Class Win32_Services -ErrorAction SilentlyContinue | select *
         
+        get-process powershell | where {$_.id -ne $PID} | Stop-Process -Confirm:$false -Verbose
 
         switch ($logOnly.IsPresent) {
         
@@ -81,7 +88,7 @@ function Clear-WannaMine
                         foreach ($commandlineObject in $commandlineObjects) {
                             
                             $commandlineObjects | out-file "$LogPath\$($date)_PreClean_CommandLineEventConsumer.txt" 
-                            Get-WMIObject -Namespace root\Subscription -Class CommandLineEventConsumer -Filter "Name= $($commandlineObject.name)" | Remove-WMIObject -Verbose
+                            Get-WMIObject -Namespace root\Subscription -Class CommandLineEventConsumer -Filter "Name= '$($commandlineObject.name)'" | Remove-WMIObject -Verbose
                             
                             }
                     }
@@ -91,7 +98,7 @@ function Clear-WannaMine
                         foreach ($FilterToConsumerBinding in $FilterToConsumerBindings) {
                             
                             $FilterToConsumerBindings | out-file "$LogPath\$($date)_PreClean_FilterToConsumerBinding.txt"
-                            Get-WMIObject -Namespace root\Subscription -Class __FilterToConsumerBinding -Filter "Name= $($commandlineObject.name)" | Remove-WMIObject -Verbose
+                            Get-WMIObject -Namespace root\Subscription -Class __FilterToConsumerBinding -Filter "Name= '$($FilterToConsumerBinding.name)'" | Remove-WMIObject -Verbose
                             
                             }
                     }
@@ -100,7 +107,7 @@ function Clear-WannaMine
                         foreach ($EventFilter in $EventFilters) {
                             
                             $EventFilters | out-file "$LogPath\$($date)_PreClean_EventFilter.txt"
-                            Get-WMIObject -Namespace root\Subscription -Class __EventFilter -Filter "Name= $($commandlineObject.name)" | Remove-WMIObject -Verbose
+                            Get-WMIObject -Namespace root\Subscription -Class __EventFilter -Filter "Name= '$($EventFilter.name)'" | Remove-WMIObject -Verbose
                             
                             }
                     }
@@ -129,6 +136,6 @@ function Clear-WannaMine
         }
     End
         {
-        Write-output "Clear-Wannamine has finished. Logs in $LogPath"
+        Write-output "Clear-Wannamine is finished. Read logs from $LogPath"
         }
 }
