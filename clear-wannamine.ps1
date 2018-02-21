@@ -136,6 +136,6 @@ function Clear-WannaMine
         }
     End
         {
-        Write-output "Clear-Wannamine is finished. Read logs from $LogPath"
+        Write-output "Clear-Wannamine has finished. Read logs from $LogPath"
         }
 }
